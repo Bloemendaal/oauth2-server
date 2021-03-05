@@ -5,6 +5,48 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- The server will now only recognise and handle an authorization header if the value of the header is non-empty. This is to circumvent issues where some common frameworks set this header even if no value is present (PR #1170)
+
+## [8.2.4] - released 2020-12-10
+### Fixed
+- Reverted the enforcement of at least one redirect_uri for a client. This change has instead been moved to version 9 (PR #1169)
+
+## [8.2.3] - released 2020-12-02
+### Added
+- Re-added support for PHP 7.2 (PR #1165, #1167)
+
+## [8.2.2] - released 2020-11-30
+### Fixed
+- Fix issue where the private key passphrase isn't correctly passed to JWT library (PR #1164)
+
+## [8.2.1] - released 2020-11-26
+### Fixed
+- If you have a password on your private key, it is now passed correctly to the JWT configuration object. (PR #1159)
+
+## [8.2.0] - released 2020-11-25
+### Added
+- Add a `getRedirectUri` function to the `OAuthServerException` class (PR #1123)
+- Support for PHP 8.0 (PR #1146)
+
+### Removed
+- Removed support for PHP 7.2 (PR #1146)
+
+### Fixed
+- Fix typo in parameter hint. `code_challenged` changed to `code_challenge`. Thrown by Auth Code Grant when the code challenge does not match the regex. (PR #1130) 
+- Undefined offset was returned when no client redirect URI was set. Now throw an invalidClient exception if no redirect URI is set against a client (PR #1140)
+
+## [8.1.1] - released 2020-07-01
+
+### Fixed
+- If you provide a valid redirect_uri with the auth code grant and an invalid scope, the server will use the given 
+redirect_uri instead of the default client redirect uri (PR #1126)
+
+
+## [8.1.0] - released 2020-04-29
+
+### Added
+- Added support for PHP 7.4 (PR #1075)
 
 ### Changed
 - If an error is encountered when running `preg_match()` to validate an RSA key, the server will now throw a RuntimeException (PR #1047)
@@ -12,6 +54,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - When storing a key, we no longer touch the file before writing it as this is an unnecessary step (PR #1064)
 - Prefix native PHP functions in namespaces with backslashes for micro-optimisations (PR #1071)
 
+### Removed
+- Support for PHP 7.1 (PR #1075)
 
 ### Fixed
 - Clients are now explicitly prevented from using the Client Credentials grant unless they are confidential to conform
@@ -20,6 +64,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 method being defined (PR #1051)
 - An exception is now thrown if a refresh token is accidentally sent in place of an authorization code when using the 
 Auth Code Grant (PR #1057)
+- Can now send access token request without being forced to specify a redirect URI (PR #1096)
+- In the BearerTokenValidator, if an implementation is using PDO, there is a possibility that a RuntimeException will be thrown when checking if an access token is revoked. This scenario no longer incorrectly issues an exception with a hint mentioning an issue with JSON decoding. (PR #1107)
 
 ## [8.0.0] - released 2019-07-13
 
@@ -483,7 +529,14 @@ Version 5 is a complete code rewrite.
 
 - First major release
 
-[Unreleased]: https://github.com/thephpleague/oauth2-server/compare/8.0.0...HEAD
+[Unreleased]: https://github.com/thephpleague/oauth2-server/compare/8.2.4...HEAD
+[8.2.4]: https://github.com/thephpleague/oauth2-server/compare/8.2.3...8.2.4
+[8.2.3]: https://github.com/thephpleague/oauth2-server/compare/8.2.2...8.2.3
+[8.2.2]: https://github.com/thephpleague/oauth2-server/compare/8.2.1...8.2.2
+[8.2.1]: https://github.com/thephpleague/oauth2-server/compare/8.2.0...8.2.1
+[8.2.0]: https://github.com/thephpleague/oauth2-server/compare/8.1.1...8.2.0
+[8.1.1]: https://github.com/thephpleague/oauth2-server/compare/8.1.0...8.1.1
+[8.1.0]: https://github.com/thephpleague/oauth2-server/compare/8.0.0...8.1.0
 [8.0.0]: https://github.com/thephpleague/oauth2-server/compare/7.4.0...8.0.0
 [7.4.0]: https://github.com/thephpleague/oauth2-server/compare/7.3.3...7.4.0
 [7.3.3]: https://github.com/thephpleague/oauth2-server/compare/7.3.2...7.3.3
