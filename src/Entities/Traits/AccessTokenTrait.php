@@ -66,7 +66,7 @@ trait AccessTokenTrait
             ->issuedAt(new DateTimeImmutable())
             ->canOnlyBeUsedAfter(new DateTimeImmutable())
             ->expiresAt($this->getExpiryDateTime())
-            ->relatedTo((string) $this->getUserIdentifier())
+            ->relatedTo((string)$this->getUserIdentifier())
             ->withClaim('scopes', $this->getScopes())
             ->getToken($this->jwtConfiguration->signer(), $this->jwtConfiguration->signingKey());
     }
