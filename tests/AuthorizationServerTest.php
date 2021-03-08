@@ -63,6 +63,7 @@ class AuthorizationServerTest extends TestCase
     public function testRespondToRequest()
     {
         $client = new ClientEntity();
+
         $client->setConfidential();
         $client->setRedirectUri('http://foo/bar');
 

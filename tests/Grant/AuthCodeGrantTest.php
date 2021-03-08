@@ -193,7 +193,7 @@ class AuthCodeGrantTest extends TestCase
             [],
             [
                 'response_type' => 'code',
-                'client_id' => 'foo',
+                'client_id'     => 'foo',
             ]
         );
 
