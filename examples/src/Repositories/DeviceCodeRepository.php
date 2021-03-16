@@ -9,19 +9,30 @@
 
 namespace OAuth2ServerExamples\Repositories;
 
+use DateTimeImmutable;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Entities\DeviceCodeEntityInterface;
 use League\OAuth2\Server\Repositories\DeviceCodeRepositoryInterface;
+use OAuth2ServerExamples\Entities\ScopeEntity as Scope;
 use OAuth2ServerExamples\Entities\DeviceCodeEntity;
+use OAuth2ServerExamples\Traits\CanStoreInCache;
+use OAuth2ServerExamples\Traits\FormatsScopesForStorage;
 
 class DeviceCodeRepository implements DeviceCodeRepositoryInterface
 {
+    use CanStoreInCache, FormatsScopesForStorage;
+
+    /**
+     * @var string
+     */
+    public static $cacheNamespace = 'device_code';
+
     /**
      * {@inheritdoc}
      */
     public function getNewDeviceCode()
     {
-        return new DeviceCodeEntity();
+        return new DeviceCodeEntity;
     }
 
     /**
@@ -29,35 +40,69 @@ class DeviceCodeRepository implements DeviceCodeRepositoryInterface
      */
     public function persistNewDeviceCode(DeviceCodeEntityInterface $deviceCodeEntity)
     {
-        // Some logic to persist a new device code to a database
+        self::setCache(
+            $deviceCodeEntity->getUserCode(),
+            $deviceCodeEntity->getIdentifier()
+        );
+
+        self::storeInCache(
+            $deviceCodeEntity->getIdentifier(),
+            [
+                'id' => $deviceCodeEntity->getIdentifier(),
+                'user_code' => $deviceCodeEntity->getUserCode(),
+                'user_id' => null,
+                'client_id' => $deviceCodeEntity->getClient()->getIdentifier(),
+                'scopes' => $this->scopesToArray($deviceCodeEntity->getScopes()),
+                'revoked' => false,
+                'retry_interval' => $deviceCodeEntity->getRetryInterval(),
+                'last_polled_at' => $deviceCodeEntity->getLastPolledDateTime(),
+                'expires_at' => $deviceCodeEntity->getExpiryDateTime(),
+            ]
+        );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getDeviceCodeEntityByDeviceCode($deviceCode, $grantType, ClientEntityInterface $clientEntity)
+    public function getDeviceCodeByIdentifier($deviceCodeId, $grantType, ClientEntityInterface $clientEntity)
     {
-        $deviceCode = new DeviceCodeEntity();
+        $deviceCode = (object) self::getCache($deviceCodeId);
 
-        // The user identifier should be set when the user authenticates on the OAuth server
-        $deviceCode->setUserIdentifier(1);
+        $deviceCodeEntity = $this->getNewDeviceCode();
+        $deviceCodeEntity->setIdentifier($deviceCode->id);
+        $deviceCodeEntity->setUserCode($deviceCode->user_code);
+        $deviceCodeEntity->setUserIdentifier($deviceCode->user_id);
+        $deviceCodeEntity->setRetryInterval($deviceCode->retry_interval);
+        $deviceCodeEntity->setLastPolledDateTime($deviceCode->last_polled_at);
 
-        return $deviceCode;
+        foreach ($deviceCode->scopes as $scope) {
+            $deviceCodeEntity->addScope(new Scope($scope));
+        }
+
+        $deviceCodeEntity->setClient($clientEntity);
+
+        self::setCache('last_polled_at', new DateTimeImmutable, $deviceCode->id);
+
+        return $deviceCodeEntity;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function revokeDeviceCode($codeId)
+    public function revokeDeviceCode($deviceCodeId)
     {
-        // Some logic to revoke device code
+        $deviceCode = (object) self::getCache($deviceCodeId);
+
+        self::setCache('revoked', true, $deviceCode->id);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function isDeviceCodeRevoked($codeId)
+    public function isDeviceCodeRevoked($deviceCodeId)
     {
-        // Some logic to check if a device code has been revoked
+        $deviceCode = self::getCache($deviceCodeId);
+
+        return $deviceCode['revoked'] === true;
     }
 }

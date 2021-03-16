@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author      Alex Bilbie <hello@alexbilbie.com>
  * @copyright   Copyright (c) Alex Bilbie
@@ -206,7 +207,7 @@ class OAuthServerException extends Exception
     {
         return new static(
             'The authorization server encountered an unexpected condition which prevented it from fulfilling'
-            . ' the request: ' . $hint,
+                . ' the request: ' . $hint,
             7,
             'server_error',
             500,
@@ -293,7 +294,7 @@ class OAuthServerException extends Exception
      *
      * @return static
      */
-    public static function authorizationPending($hint = '')
+    public static function authorizationPending($hint = null)
     {
         return new static(
             'The authorization request is still pending as the end user hasn\'t yet completed the user interaction steps. '
@@ -303,6 +304,33 @@ class OAuthServerException extends Exception
             400,
             $hint
         );
+    }
+
+    /**
+     * Slow down error.
+     *
+     * @param null|string $hint
+     * @param Throwable   $previous Previous exception
+     *
+     * @return static
+     */
+    public static function slowDown($slowDown = 5, $hint = null, Throwable $previous = null)
+    {
+        $serverException = new static(
+            'The authorization request is still pending and polling should continue, '
+                . 'but the interval MUST be increased by ' . $slowDown
+                . ' seconds for this and all subsequent requests.',
+            12,
+            'slow_down',
+            400,
+            $hint,
+            null,
+            null
+        );
+
+        $serverException->payload['slow_down'] = $slowDown;
+
+        return $serverException;
     }
 
     /**

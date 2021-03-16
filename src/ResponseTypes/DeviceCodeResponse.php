@@ -1,4 +1,5 @@
 <?php
+
 /**
  * OAuth 2.0 Bearer Token Response.
  *
@@ -34,12 +35,22 @@ class DeviceCodeResponse extends AbstractResponseType
     {
         $expireDateTime = $this->deviceCode->getExpiryDateTime()->getTimestamp();
 
+        // Required
         $responseParams = [
-            'expires_in'   => $expireDateTime - \time(),
             'device_code' => $this->payload,
             'user_code' => $this->deviceCode->getUserCode(),
+            'expires_in'   => $expireDateTime - \time(),
             'verification_uri' => $this->deviceCode->getVerificationUri(),
         ];
+
+        // Optional
+        $verificationUri = $responseParams['verification_uri'];
+
+        if ($verificationUri) {
+            $responseParams['verification_uri_complete'] = $verificationUri . '?user_code=' . $responseParams['user_code'];
+        }
+
+        $responseParams['interval'] = $this->deviceCode->getRetryInterval();
 
         $responseParams = \json_encode($responseParams);
 

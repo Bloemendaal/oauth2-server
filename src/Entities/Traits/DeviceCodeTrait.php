@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author      Alex Bilbie <hello@alexbilbie.com>
  * @copyright   Copyright (c) Alex Bilbie
@@ -24,6 +25,16 @@ trait DeviceCodeTrait
      * @var string
      */
     private $verificationUri;
+
+    /**
+     * @var int
+     */
+    private $retryInterval;
+
+    /**
+     * @var DateTimeImmutable
+     */
+    private $lastPolledDateTime;
 
     /**
      * @return string
@@ -57,6 +68,61 @@ trait DeviceCodeTrait
     public function setVerificationUri($verificationUri)
     {
         $this->verificationUri = $verificationUri;
+    }
+
+    /**
+     * @return int
+     */
+    public function getRetryInterval()
+    {
+        return $this->retryInterval;
+    }
+
+    /**
+     * @param int $retryInterval
+     */
+    public function setRetryInterval($retryInterval)
+    {
+        $this->retryInterval = $retryInterval;
+    }
+
+    /**
+     * @return DateTimeImmutable|null
+     */
+    public function getLastPolledDateTime()
+    {
+        return $this->lastPolledDateTime;
+    }
+
+    /**
+     * @param DateTimeImmutable $lastPolledDateTime
+     */
+    public function setLastPolledDateTime($lastPolledDateTime)
+    {
+        $this->lastPolledDateTime = $lastPolledDateTime;
+    }
+
+    /**
+     * @param DateTimeImmutable $nowDateTime
+     * @return int Slow-down in seconds for the retry interval.
+     */
+    public function checkRetryFrequency(DateTimeImmutable $nowDateTime)
+    {
+        $retryInterval = $this->getRetryInterval();
+        $lastPolledDateTime = $this->getLastPolledDateTime();
+
+        if ($lastPolledDateTime) {
+
+            // Seconds passed since last retry.
+            $nowTimestamp = $nowDateTime->getTimestamp();
+            $lastPollingTimestamp = $lastPolledDateTime->getTimestamp();
+
+            if ($retryInterval > $nowTimestamp - $lastPollingTimestamp) {
+                return $retryInterval; // polling to fast.
+            }
+        }
+
+        return 0;
     }
 
     /**
