@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @author      Alex Bilbie <hello@alexbilbie.com>
  * @copyright   Copyright (c) Alex Bilbie
@@ -268,5 +269,10 @@ class AuthorizationServer implements EmitterAwareInterface
     public function setDefaultScope($defaultScope)
     {
         $this->defaultScope = $defaultScope;
+    }
+
+    public function getEncryptionKey()
+    {
+        return $this->encryptionKey;
     }
 }
